@@ -4,14 +4,20 @@ const mongoose_delete = require('mongoose-delete');
 const orderSchema = new mongoose.Schema({
     customerInfo: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'customer',
+        ref: 'user',
+    },
+    orderCus: {
+        type: String,
     },
     creatat: {
         type: Date,
         default: Date.now,
     },
     totalPrice: Number,
-    status: String,
+    status:{
+        type: String,
+        default: 'chưa xử lý'
+    }
 });
 
 orderSchema.plugin(mongoose_delete, { overrideMethods: true });

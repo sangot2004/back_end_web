@@ -9,6 +9,7 @@ const orderdetailSchema = new mongoose.Schema({
     ],
     recipient_name: String,
     address: String,
+    phone: String,
     note: String,
 
 });

@@ -21,18 +21,46 @@ module.exports = {
     },
 
     getCategory: async (queryString) => {
-        const page = queryString.page;
-        const {filter, limit, population} = aqp(queryString);
-        delete filter.page;
+        const page = parseInt(queryString.page) || 1;
+        const { filter, limit, population } = aqp(queryString);
         let offset = (page - 1) * limit;
-        result = await Categories.find(filter)
-        .populate(population)
-        .skip(offset)
-        .limit(limit)
-        .exec();
-
-        return result;    
+    
+        // Thêm xử lý tìm kiếm mờ (partial match)
+        let searchFilter = {};
+        if (queryString.name) {
+            searchFilter.name = { $regex: queryString.name, $options: 'i' }; // 'i' = ignore case
+        }
+    
+        // Thêm xử lý sắp xếp theo giá
+        let sort = {};
+        if (queryString.sort) {
+            if (queryString.sort === 'price_asc') {
+                sort.price = 1; // Sắp xếp giá tăng dần
+            } else if (queryString.sort === 'price_desc') {
+                sort.price = -1; // Sắp xếp giá giảm dần
+            }
+        }
+    
+        // Kết hợp filter và searchFilter để tìm kiếm theo tên loại món
+        const categories = await Categories.find({ ...filter, ...searchFilter })
+            .populate(population)
+            .skip(offset)
+            .limit(limit)
+            .sort(sort) // Áp dụng sắp xếp
+            .exec();
+    
+        // Đếm số món ăn dựa trên length của foods
+        const result = categories.map((category) => {
+            return {
+                ...category.toObject(), // Convert document thành object thường
+                foodCount: category.foods ? category.foods.length : 0
+            };
+        });
+    
+        return result;
     },
+    
+    
 
     updateCategory: async (data) => {
         let result = await Categories.updateOne({_id: data.id}, {...data});

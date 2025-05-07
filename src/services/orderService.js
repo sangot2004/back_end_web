@@ -3,17 +3,29 @@ const aqp = require('api-query-params');
 
 module.exports = {
     gOrder: async (queryString) => {
-        const page = queryString.page;
-
-        const {filter, limit, population} = aqp(queryString);
+        const page = parseInt(queryString.page) || 1;
+        const limit = parseInt(queryString.limit) || 10;
+    
+        const { filter, population } = aqp(queryString);
         delete filter.page;
-        let offset = (page - 1) * limit;
-        result = await Order.find(filter)
+    
+        const offset = (page - 1) * limit;
+    
+        const totalOrders = await Order.countDocuments(filter); // tổng số đơn hàng
+    
+        const orders = await Order.find(filter)
             .populate(population)
             .skip(offset)
             .limit(limit)
             .exec();
-        return result;
+    
+        return {
+            orders,
+            currentPage: page,
+            totalOrdersInPage: orders.length,
+            totalPages: Math.ceil(totalOrders / limit),
+            totalOrders,
+        };
     },
 
     crOrder: async (data) => {

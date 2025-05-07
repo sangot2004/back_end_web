@@ -6,7 +6,7 @@ const {uploadSingleFile} = require('../services/fileService');
 module.exports = {
     postCreateFoodAPI: async (req, res) => {
 
-        let {name, price, description, categoriesInfo} = req.body;
+        let {name, nameCategory, price, description, categoriesInfo} = req.body;
 
         let imageUrl = "";
 
@@ -19,6 +19,7 @@ module.exports = {
 
         let foodData = {
             name,
+            nameCategory,
             price,
             description,
             categoriesInfo,
@@ -35,12 +36,23 @@ module.exports = {
     },
 
     getFoodAPI: async (req, res) => {
-        let result = await getFood(req.query);
+        const { foods, totalItems } = await getFood(req.query);
+        const page = parseInt(req.query.page);
+        const limit = parseInt(req.query.limit); // cần lấy limit từ query
+    
+        const totalPages = Math.ceil(totalItems / limit); // tính tổng số trang
+    
         return res.status(200).json({
             EC: 0,
-            data: result
-        })
+            data: foods,
+            totalFoods: foods.length,
+            currentPage: page,
+            totalPages,
+            totalItems
+        });
     },
+    
+    
 
     UpdateFoodAPI: async(req, res) => {
         let result = await updateFood(req.body);
